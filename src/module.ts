@@ -120,16 +120,16 @@ export default defineNuxtModule<ModuleOptions>({
       nitroConfig.externals = defu(typeof nitroConfig.externals === 'object' ? nitroConfig.externals : {}, {
         inline: [resolve('./runtime')]
       })
-      nitroConfig.alias['#auth'] = resolve('./runtime/server/services')
+      nitroConfig.alias['#auth'] = resolve('./runtime/server/services/authjs/nuxtAuthHandler')
     })
 
     addTemplate({
       filename: 'types/auth.d.ts',
       getContents: () => [
         'declare module \'#auth\' {',
-        `  const getServerSession: typeof import('${resolve('./runtime/server/services')}').getServerSession`,
-        `  const getToken: typeof import('${resolve('./runtime/server/services')}').getToken`,
-        `  const NuxtAuthHandler: typeof import('${resolve('./runtime/server/services')}').NuxtAuthHandler`,
+        `  const getServerSession: typeof import('${resolve('./runtime/server/services/authjs/nuxtAuthHandler')}').getServerSession`,
+        `  const getToken: typeof import('${resolve('./runtime/server/services/authjs/nuxtAuthHandler')}').getToken`,
+        `  const NuxtAuthHandler: typeof import('${resolve('./runtime/server/services/authjs/nuxtAuthHandler')}').NuxtAuthHandler`,
         options.provider.type === 'local' ? genInterface('SessionData', (options.provider as any).sessionDataType) : '',
         '}'
       ].join('\n')
