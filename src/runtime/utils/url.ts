@@ -1,8 +1,7 @@
 import { joinURL } from 'ufo'
 import getURL from 'requrl'
 import { sendRedirect } from 'h3'
-import { useRequestEvent, useNuxtApp } from '#app'
-import { useAuthState, useRuntimeConfig } from '#imports'
+import { useRequestEvent, useNuxtApp, abortNavigation, useAuthState, useRuntimeConfig } from '#imports'
 
 export const getRequestURL = (includePath = true) => getURL(useRequestEvent()?.node.req, includePath)
 export const joinPathToApiURL = (path: string) => joinURL(useAuthState()._internal.baseURL, path)
@@ -24,7 +23,11 @@ export const navigateToAuthPages = (href: string) => {
 
   if (process.server) {
     if (nuxtApp.ssrContext && nuxtApp.ssrContext.event) {
-      return nuxtApp.callHook('app:redirected').then(() => sendRedirect(nuxtApp.ssrContext!.event, href, 302))
+      return nuxtApp.callHook('app:redirected').then(() => {
+        sendRedirect(nuxtApp.ssrContext!.event, href, 302)
+
+        abortNavigation()
+      })
     }
   }
 
@@ -67,5 +70,7 @@ export const determineCallbackUrl = <T extends string | Promise<string>>(authCon
         return getOriginalTargetPath()
       }
     }
+  } else if (authConfig.globalAppMiddleware === true) {
+    return getOriginalTargetPath()
   }
 }

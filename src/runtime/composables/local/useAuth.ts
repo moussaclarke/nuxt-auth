@@ -1,5 +1,5 @@
 import { readonly, Ref } from 'vue'
-import { callWithNuxt } from '#app'
+import { callWithNuxt } from '#app/nuxt'
 import { CommonUseAuthReturn, SignOutFunc, SignInFunc, GetSessionFunc, SecondarySignInOptions } from '../../types'
 import { _fetch } from '../../utils/fetch'
 import { jsonPointerGet, useTypedBackendConfig } from '../../helpers'
@@ -36,10 +36,10 @@ const signIn: SignInFunc<Credentials, any> = async (credentials, signInOptions, 
 
   await nextTick(getSession)
 
-  const { callbackUrl, redirect = true } = signInOptions ?? {}
+  const { callbackUrl, redirect = true, external } = signInOptions ?? {}
   if (redirect) {
     const urlToNavigateTo = callbackUrl ?? await getRequestURLWN(nuxt)
-    return navigateTo(urlToNavigateTo)
+    return navigateTo(urlToNavigateTo, { external })
   }
 }
 
@@ -53,13 +53,17 @@ const signOut: SignOutFunc = async (signOutOptions) => {
   data.value = null
   rawToken.value = null
 
-  const { path, method } = config.endpoints.signOut
+  const signOutConfig = config.endpoints.signOut
+  let res
 
-  const res = await _fetch(nuxt, path, { method, headers })
+  if (signOutConfig) {
+    const { path, method } = signOutConfig
+    res = await _fetch(nuxt, path, { method, headers })
+  }
 
-  const { callbackUrl, redirect = true } = signOutOptions ?? {}
+  const { callbackUrl, redirect = true, external } = signOutOptions ?? {}
   if (redirect) {
-    await navigateTo(callbackUrl ?? await getRequestURLWN(nuxt))
+    await navigateTo(callbackUrl ?? await getRequestURLWN(nuxt), { external })
   }
 
   return res
@@ -72,11 +76,11 @@ const getSession: GetSessionFunc<SessionData | null | void> = async (getSessionO
   const { path, method } = config.endpoints.getSession
   const { data, loading, lastRefreshedAt, token, rawToken } = useAuthState()
 
-  if (!token.value) {
+  if (!token.value && !getSessionOptions?.force) {
     return
   }
 
-  const headers = new Headers({ [config.token.headerName]: token.value } as HeadersInit)
+  const headers = new Headers(token.value ? { [config.token.headerName]: token.value } as HeadersInit : undefined)
 
   loading.value = true
   try {
@@ -89,12 +93,12 @@ const getSession: GetSessionFunc<SessionData | null | void> = async (getSessionO
   loading.value = false
   lastRefreshedAt.value = new Date()
 
-  const { required = false, callbackUrl, onUnauthenticated } = getSessionOptions ?? {}
+  const { required = false, callbackUrl, onUnauthenticated, external } = getSessionOptions ?? {}
   if (required && data.value === null) {
     if (onUnauthenticated) {
       return onUnauthenticated()
     } else {
-      await navigateTo(callbackUrl ?? await getRequestURLWN(nuxt))
+      await navigateTo(callbackUrl ?? await getRequestURLWN(nuxt), { external })
     }
   }
 
