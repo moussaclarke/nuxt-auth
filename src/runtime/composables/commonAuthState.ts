@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import getURL from 'requrl'
 import { joinURL } from 'ufo'
-import { SessionLastRefreshedAt, SessionStatus } from '../types'
+import type { SessionLastRefreshedAt, SessionStatus } from '../types'
 import { useRuntimeConfig, useRequestEvent, useState } from '#imports'
 
 export const makeCommonAuthState = <SessionData>() => {
@@ -48,7 +48,8 @@ export const makeCommonAuthState = <SessionData>() => {
     lastRefreshedAt,
     status,
     _internal: {
-      baseURL
+      baseURL,
+      pathname
     }
   }
 }

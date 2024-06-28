@@ -20,11 +20,23 @@ export default defineNuxtConfig({
         sameSiteAttribute: 'lax'
       },
       refreshToken: {
-        signInResponseRefreshTokenPointer: '/token/refreshToken'
+        signInResponseRefreshTokenPointer: '/token/refreshToken',
+        refreshRequestTokenPointer: '/refreshToken'
       }
+    },
+    sessionRefresh: {
+      handler: './config/AuthRefreshHandler'
     },
     globalAppMiddleware: {
       isEnabled: true
+    }
+  },
+  routeRules: {
+    '/with-caching': {
+      swr: 86400000,
+      auth: {
+        disableServerSideAuth: true
+      }
     }
   }
 })
